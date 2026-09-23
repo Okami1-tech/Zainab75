@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#07030d">
+<title>Cosmic Nikkah</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05020a}
+  body{touch-action:manipulation}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+(() => {
+'use strict';
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d', {alpha:false});
+let W=innerWidth,H=innerHeight,DPR=1;
+let cx,cy,scale;
+let particles=[];
+let stars=[];
+let stage=0;
+let stageT=0;
+let last=performance.now();
+let targetStage=0;
+let transition=1;
+let audioCtx=null;
+
+const PURPLE='#a855f7';
+const VIOLET='#7c3aed';
+const ORANGE='#ff8a18';
+const GOLD='#ffb52e';
+const WORDS=['NIKKAH','LOVE'];
+
+function resize(){
+  W=innerWidth; H=innerHeight;
+  DPR=Math.min(devicePixelRatio||1,2);
+  canvas.width=Math.floor(W*DPR);
+  canvas.height=Math.floor(H*DPR);
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  cx=W*.5; cy=H*.5;
+  scale=Math.min(W,H);
+  makeStars();
+  buildParticles();
+}
+addEventListener('resize',resize,{passive:true});
+
+function rand(a,b){return a+Math.random()*(b-a)}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function ease(x){return x*x*(3-2*x)}
+function ease5(x){return x<.5?16*x*x*x*x*x:1-Math.pow(-2*x+2,5)/2}
+function mix(a,b,t){return a+(b-a)*t}
+
+function makeStars(){
+  stars=[];
+  const n=Math.floor(clamp(W*H/9000,100,330));
+  for(let i=0;i<n;i++){
+    stars.push({
+      x:Math.random()*W,y:Math.random()*H,
+      r:rand(.25,1.45),a:rand(.18,.8),
+      tw:rand(0,Math.PI*2),sp:rand(.4,1.7)
+    });
+  }
+}
+
+function heartPoint(t){
+  // classic parametric heart, normalized
+  const x=16*Math.pow(Math.sin(t),3);
+  const y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+  return {x:x/18,y:y/18};
+}
+
+function makeHeartTarget(i,n){
+  // Fill the heart rather than only outlining it.
+  // Deterministic radial packing creates a dense typographic heart.
+  const row=i % 80;
+  const band=Math.floor(i/80);
+  const seed=(i*9301+49297)%233280/233280;
+  const angle=seed*Math.PI*2;
+  const radius=Math.sqrt((row+0.5)/80);
+  const p=heartPoint(angle);
+  // Mix outline geometry with interior points.
+  let x=p.x*radius;
+  let y=p.y*radius;
+  // add broad interior offset for a fuller silhouette
+  const jitter=(seed-.5)*.018;
+  x+=jitter; y+=jitter;
+  return {
+    x:cx+x*scale*.34,
+    y:cy+y*scale*.34
+  };
+}
+
+function buildParticles(){
+  const n=Math.floor(clamp(W*H/5000,650,1550));
+  particles=[];
+  for(let i=0;i<n;i++){
+    const ang=Math.random()*Math.PI*2;
+    const rad=Math.pow(Math.random(),.48)*Math.min(W,H)*.72;
+    const word=WORDS[i%2];
+    particles.push({
+      x:cx+Math.cos(ang)*rad,
+      y:cy+Math.sin(ang)*rad,
+      vx:0,vy:0,
+      sx:cx+Math.cos(ang)*rad,
+      sy:cy+Math.sin(ang)*rad,
+      tx:0,ty:0,
+      word,
+      size:rand(5.5,10.5),
+      rot:rand(-.16,.16),
+      phase:Math.random()*Math.PI*2,
+      hue:i%3===0?'o':'p',
+      alpha:rand(.42,.9),
+      depth:rand(.7,1.35)
+    });
+  }
+  particles.forEach((p,i)=>{
+    const h=makeHeartTarget(i,particles.length);
+    p.tx=h.x;p.ty=h.y;
+  });
+}
+
+function stageTarget(p,i,t){
+  const maxR=Math.min(W,H)*.67;
+  if(stage===0){
+    // scattered cosmic field
+    return {
+      x:p.sx + Math.sin(t*.35+p.phase)*18,
+      y:p.sy + Math.cos(t*.31+p.phase)*18
+    };
+  }
+  if(stage===1){
+    // gigantic vortex
+    const dx=p.sx-cx, dy=p.sy-cy;
+    const r=Math.hypot(dx,dy);
+    const a=Math.atan2(dy,dx)+1.15 + Math.min(2.2,r/scale*2.4);
+    const rr=Math.min(maxR, r*.72+scale*.07);
+    return {x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr};
+  }
+  if(stage===2){
+    // funnel into a heart-shaped basin
+    const h=makeHeartTarget(i,particles.length);
+    const dx=h.x-cx,dy=h.y-cy;
+    const pull=.34;
+    return {
+      x:mix(p.sx,h.x,.62)+Math.sin(t*1.2+p.phase)*18*(1-pull),
+      y:mix(p.sy,h.y,.62)+Math.cos(t*1.05+p.phase)*18*(1-pull)
+    };
+  }
+  if(stage>=3){
+    return makeHeartTarget(i,particles.length);
+  }
+}
+
+function setStage(s){
+  stage=s;
+  stageT=0;
+  transition=0;
+  // keep the current positions as the next starting point
+  particles.forEach(p=>{p.sx=p.x;p.sy=p.y});
+}
+
+function next(){
+  setStage((stage+1)%5);
+}
+
+addEventListener('pointerdown', e=>{
+  next();
+  // tiny tactile sound, silent by default
+},{passive:true});
+
+function glowText(p, x,y, alpha){
+  const color=p.hue==='o'?ORANGE:PURPLE;
+  ctx.save();
+  ctx.globalAlpha=alpha*p.alpha;
+  ctx.translate(x,y);
+  ctx.rotate(p.rot);
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.font=`800 ${p.size}px Arial, sans-serif`;
+  ctx.shadowColor=color;
+  ctx.shadowBlur=10;
+  ctx.fillStyle=color;
+  ctx.fillText(p.word,0,0);
+  ctx.shadowBlur=3;
+  ctx.fillStyle='#fff';
+  ctx.globalAlpha=alpha*p.alpha*.18;
+  ctx.fillText(p.word,0,0);
+  ctx.restore();
+}
+
+function drawNebula(t){
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,scale*.75);
+  g.addColorStop(0,'rgba(104,32,170,.10)');
+  g.addColorStop(.32,'rgba(80,20,150,.07)');
+  g.addColorStop(.72,'rgba(255,75,0,.025)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+  // slow cosmic arcs
+  ctx.save();
+  ctx.translate(cx,cy);
+  for(let k=0;k<7;k++){
+    ctx.rotate(.002*(k%2?1:-1));
+    ctx.beginPath();
+    ctx.arc(0,0,scale*(.22+k*.075),t*.04+k*.7,t*.04+k*.7+1.8);
+    ctx.strokeStyle=k%2?'rgba(168,85,247,.035)':'rgba(255,138,24,.028)';
+    ctx.lineWidth=1.2;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawStars(t){
+  for(const s of stars){
+    const a=s.a*(.65+.35*Math.sin(t*s.sp+s.tw));
+    ctx.globalAlpha=a;
+    ctx.fillStyle=(s.tw%2>.95)?ORANGE:'#d8b4fe';
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawCore(t){
+  if(stage<2)return;
+  const strength=stage===2?Math.sin(Math.min(stageT/2,1)*Math.PI):1;
+  const r=scale*.115;
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r*2.4);
+  g.addColorStop(0,`rgba(255,179,60,${.20*strength})`);
+  g.addColorStop(.25,`rgba(168,85,247,${.12*strength})`);
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(cx-r*2.4,cy-r*2.4,r*4.8,r*4.8);
+}
+
+function frame(t,dt){
+  stageT+=dt;
+  transition=Math.min(1,transition+dt*.9);
+
+  ctx.fillStyle='#05020a';
+  ctx.fillRect(0,0,W,H);
+  drawNebula(t);
+  drawStars(t);
+
+  // particles
+  const prog=ease5(clamp(transition,0,1));
+  for(let i=0;i<particles.length;i++){
+    const p=particles[i];
+    const q=stageTarget(p,i,t);
+    const follow=stage===0?.045:stage===1?.075:stage===2?.115:.18;
+    p.x += (q.x-p.x)*follow;
+    p.y += (q.y-p.y)*follow;
+
+    // energetic orbiting motion before the heart settles
+    if(stage<3){
+      const dx=p.x-cx,dy=p.y-cy;
+      const rr=Math.hypot(dx,dy)+.001;
+      const spin=(stage===1?.0009:stage===2?.00035);
+      p.x += (-dy/rr)*scale*spin;
+      p.y += ( dx/rr)*scale*spin;
+    }
+
+    let a=1;
+    if(stage===0)a=.78;
+    if(stage===1)a=.88;
+    if(stage===2)a=.96;
+    if(stage>=3)a=1;
+
+    // motion trail
+    if(stage>=1){
+      const trail=.13;
+      ctx.globalAlpha=trail*p.alpha;
+      ctx.strokeStyle=p.hue==='o'?ORANGE:PURPLE;
+      ctx.lineWidth=.7;
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y);
+      ctx.lineTo(p.x-(q.x-p.x)*5,p.y-(q.y-p.y)*5);
+      ctx.stroke();
+    }
+    glowText(p,p.x,p.y,a);
+  }
+
+  drawCore(t);
+
+  // Final heart aura
+  if(stage===3 || stage===4){
+    const pulse=.5+.5*Math.sin(t*1.5);
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    const r=scale*(.28+.015*pulse);
+    const g=ctx.createRadialGradient(cx,cy,scale*.08,cx,cy,r);
+    g.addColorStop(0,'rgba(168,85,247,.08)');
+    g.addColorStop(.45,'rgba(255,138,24,.035)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(cx-r,cy-r,r*2,r*2);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(n=>{
+    const d=Math.min(.04,(n-last)/1000);
+    last=n;frame(n/1000,d);
+  });
+}
+
+resize();
+frame(performance.now()/1000,.016);
+})();
+</script>
+</body>
+</html>
