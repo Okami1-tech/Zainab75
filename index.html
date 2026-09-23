@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Hayati 💜</title><style>
 *{
     margin:0;
@@ -13,8 +13,13 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#030006;
-    font-family:Arial,sans-serif;
+    background:#030007;
+    font-family:Georgia,"Times New Roman",serif;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    color:white;
 }
 
 canvas{
@@ -24,55 +29,258 @@ canvas{
     height:100%;
 }
 
-.center{
+.vignette{
     position:fixed;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    z-index:5;
-    text-align:center;
+    inset:0;
     pointer-events:none;
+    z-index:2;
+    background:
+        radial-gradient(
+            circle at center,
+            transparent 20%,
+            rgba(0,0,0,.18) 55%,
+            rgba(0,0,0,.72) 100%
+        );
+}
+
+.scene{
+    position:fixed;
+    inset:0;
+    z-index:5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    opacity:0;
+    transition:
+        opacity 1.6s cubic-bezier(.22,1,.36,1),
+        transform 1.6s cubic-bezier(.22,1,.36,1);
+    transform:scale(.94);
+}
+
+.scene.active{
+    opacity:1;
+    transform:scale(1);
 }
 
 .name{
-    color:#fff;
-    font-size:clamp(45px,12vw,90px);
-    font-weight:800;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:clamp(55px,17vw,125px);
+    font-weight:normal;
     letter-spacing:2px;
+    color:#fff;
     text-shadow:
-        0 0 8px #ff9acb,
-        0 0 20px #ff4fa3,
-        0 0 45px #a855f7,
-        0 0 80px #8a2be2;
-    animation:glow 2.5s ease-in-out infinite alternate;
+        0 0 8px #fff,
+        0 0 20px #ff72bb,
+        0 0 42px #b34dff,
+        0 0 90px #7d20ff;
 }
 
-@keyframes glow{
-    from{
-        transform:scale(1);
-        filter:brightness(1);
-    }
-    to{
-        transform:scale(1.045);
-        filter:brightness(1.25);
-    }
+.subtitle{
+    margin-top:10px;
+    text-align:center;
+    font-family:Arial,sans-serif;
+    font-size:clamp(13px,4vw,20px);
+    letter-spacing:6px;
+    color:#ffc1e3;
+    text-transform:uppercase;
+}
+
+.message{
+    width:min(88vw,650px);
+    text-align:center;
+    padding:25px;
+}
+
+.message .small{
+    font-family:Arial,sans-serif;
+    font-size:clamp(11px,3vw,15px);
+    letter-spacing:5px;
+    text-transform:uppercase;
+    color:#d9a0ff;
+    margin-bottom:22px;
+}
+
+.message h1{
+    font-size:clamp(30px,8vw,58px);
+    font-weight:normal;
+    line-height:1.12;
+    margin-bottom:24px;
+    color:white;
+    text-shadow:
+        0 0 18px #ff69b4,
+        0 0 40px #8a2be2;
+}
+
+.message p{
+    font-family:Arial,sans-serif;
+    font-size:clamp(15px,4.3vw,21px);
+    line-height:1.85;
+    color:rgba(255,255,255,.88);
+}
+
+.final{
+    width:min(90vw,680px);
+    text-align:center;
+    padding:25px;
+}
+
+.final .hayati{
+    font-size:clamp(44px,12vw,85px);
+    margin-bottom:25px;
+    text-shadow:
+        0 0 12px #ff7abd,
+        0 0 30px #d14cff,
+        0 0 70px #8a2be2;
+}
+
+.final p{
+    font-family:Arial,sans-serif;
+    font-size:clamp(15px,4.2vw,20px);
+    line-height:1.9;
+    color:rgba(255,255,255,.9);
+}
+
+.final .signature{
+    margin-top:28px;
+    font-family:Georgia,serif;
+    font-size:clamp(18px,5vw,27px);
+    color:#ffb2da;
+}
+
+.tap{
+    position:fixed;
+    bottom:28px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    font-family:Arial,sans-serif;
+    font-size:11px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.55);
+    transition:opacity .8s ease;
+    pointer-events:none;
+}
+
+.tap.hide{
+    opacity:0;
+}
+
+.flash{
+    position:fixed;
+    inset:0;
+    z-index:15;
+    pointer-events:none;
+    opacity:0;
+    background:radial-gradient(
+        circle at center,
+        rgba(255,150,210,.18),
+        transparent 55%
+    );
+    transition:opacity 1.2s ease;
+}
+
+.flash.on{
+    opacity:1;
 }
 </style></head><body><canvas id="canvas"></canvas>
 
-<div class="center">
-    <div class="name">Hayati 💜</div>
+<div class="vignette"></div><div class="flash" id="flash"></div><!-- SCENE 1 --><div class="scene active" id="scene1">
+    <div>
+        <div class="name">Hayati</div>
+        <div class="subtitle">my love • my queen</div>
+    </div>
+</div><!-- SCENE 2 --><div class="scene" id="scene2">
+    <div class="message">
+        <div class="small">there is something I want you to know</div>    <h1>You are so much more<br>than you realize.</h1>
+
+    <p>
+        Sometimes I wish you could see yourself
+        through my eyes for just a moment...
+        because maybe then you'd understand
+        why I cherish you the way I do.
+    </p>
+</div>
+
+</div><!-- SCENE 3 --><div class="scene" id="scene3">
+    <div class="message">
+        <div class="small">thank you</div>    <h1>Thank you for being you.</h1>
+
+    <p>
+        Thank you for the little things you do.
+        For your care. Your patience.
+        Your kindness. Your presence.
+        For the moments you probably think
+        are small but mean so much to me.
+    </p>
+</div>
+
+</div><!-- SCENE 4 --><div class="scene" id="scene4">
+    <div class="message">
+        <div class="small">what you mean to me</div>    <h1>I don't just appreciate having you...</h1>
+
+    <p>
+        I appreciate <b>you</b>.<br><br>
+
+        Your heart.<br>
+        Your softness.<br>
+        Your smile.<br>
+        Your beautiful way of caring.<br>
+        The person you are when nobody is watching.
+    </p>
+</div>
+
+</div><!-- SCENE 5 --><div class="scene" id="scene5">
+    <div class="message">
+        <div class="small">and if I had to choose again</div>    <h1>I'd still choose you.</h1>
+
+    <p>
+        Not because you're perfect in the way
+        people imagine perfection...
+        but because somehow,
+        being with you feels right to my heart.
+    </p>
+</div>
+
+</div><!-- FINAL --><div class="scene" id="scene6">
+    <div class="final">
+        <div class="hayati">Hayati 💜</div>    <p>
+        My Queen. My Sarauniya.<br><br>
+
+        I hope you never forget how deeply
+        you are cherished, appreciated and loved.<br><br>
+
+        You are one of the most beautiful parts
+        of my life, and I am genuinely grateful
+        that our paths crossed.<br><br>
+
+        I may never find enough words to explain
+        everything you mean to me...
+        but I will spend my time showing you.
+    </p>
+
+    <div class="signature">
+        Always grateful for you. 💜
+    </div>
+</div>
+
+</div><div class="tap" id="tap">
+    TAP ANYWHERE TO CONTINUE
 </div><script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-let W,H,DPR;
+let W = 0;
+let H = 0;
+let DPR = 1;
 
 function resize(){
 
-    DPR = Math.min(window.devicePixelRatio || 1,2);
-
     W = window.innerWidth;
     H = window.innerHeight;
+
+    DPR = Math.min(window.devicePixelRatio || 1,2);
 
     canvas.width = W * DPR;
     canvas.height = H * DPR;
@@ -81,15 +289,16 @@ function resize(){
     canvas.style.height = H + "px";
 
     ctx.setTransform(DPR,0,0,DPR,0,0);
+
+    createParticles();
 }
 
-resize();
 window.addEventListener("resize",resize);
 
 
-/* =========================
-   HEART EQUATION
-========================= */
+/* =====================================
+   HEART MATHEMATICS
+===================================== */
 
 function heart(t){
 
@@ -104,242 +313,268 @@ function heart(t){
 }
 
 
-/* =========================
+/* =====================================
    PARTICLES
-========================= */
+===================================== */
 
-const particles = [];
+let particles = [];
 
-const count =
-    W < 600 ? 320 : 650;
+function createParticles(){
 
-class Particle{
+    const count =
+        W < 600 ? 480 : 850;
 
-    constructor(){
+    particles = [];
 
-        this.reset(true);
-    }
+    for(let i=0;i<count;i++){
 
-    reset(initial=false){
+        const t =
+            (i/count)*Math.PI*2;
 
-        this.t =
-            Math.random()*Math.PI*2;
+        const h = heart(t);
 
-        this.offset =
-            Math.random()*Math.PI*2;
+        const spread =
+            0.55 +
+            Math.random()*0.75;
 
-        this.speed =
-            0.00015 +
-            Math.random()*0.00055;
+        particles.push({
 
-        this.size =
-            W < 600
-            ? 7 + Math.random()*5
-            : 9 + Math.random()*7;
+            angle:t,
 
-        this.alpha =
-            0.35 +
-            Math.random()*0.65;
+            x:W/2 + h.x*(W<600?9.5:15)*spread,
 
-        this.pink =
-            Math.random() > 0.48;
+            y:H/2 + h.y*(W<600?9.5:15)*spread,
 
-        this.drift =
-            Math.random()*18;
+            targetX:W/2 + h.x*(W<600?9.5:15)*spread,
 
-        this.twinkle =
-            Math.random()*Math.PI*2;
+            targetY:H/2 + h.y*(W<600?9.5:15)*spread,
 
-        if(initial){
+            size:
+                W<600
+                ? 5+Math.random()*5
+                : 6+Math.random()*7,
 
-            this.x =
-                Math.random()*W;
+            speed:
+                .018+
+                Math.random()*.035,
 
-            this.y =
-                Math.random()*H;
+            phase:
+                Math.random()*Math.PI*2,
 
-        }
-    }
+            orbit:
+                Math.random()*Math.PI*2,
 
-    update(time){
+            depth:
+                .3+
+                Math.random()*.7,
 
-        const mobile = W < 600;
-
-        const scale =
-            mobile ? 9.5 : 16;
-
-        const pulse =
-            1 +
-            Math.sin(
-                time*0.0018+
-                this.offset
-            )*0.055;
-
-        const pos =
-            heart(
-                this.t +
-                time*this.speed
-            );
-
-        this.x =
-            W/2 +
-            pos.x*scale*pulse +
-            Math.sin(
-                time*0.0007+
-                this.offset
-            )*this.drift;
-
-        this.y =
-            H/2 +
-            pos.y*scale*pulse +
-            Math.cos(
-                time*0.0008+
-                this.offset
-            )*this.drift;
-
-        this.currentAlpha =
-            this.alpha *
-            (
-                0.72 +
-                Math.sin(
-                    time*0.003+
-                    this.twinkle
-                )*0.28
-            );
-    }
-
-    draw(){
-
-        ctx.font =
-            `bold ${this.size}px Arial`;
-
-        ctx.textAlign="center";
-        ctx.textBaseline="middle";
-
-        const pink =
-            "#ff5cad";
-
-        const purple =
-            "#b56cff";
-
-        const color =
-            this.pink ? pink : purple;
-
-        ctx.fillStyle =
-            color;
-
-        ctx.globalAlpha =
-            this.currentAlpha;
-
-        ctx.shadowBlur =
-            this.size*1.5;
-
-        ctx.shadowColor =
-            color;
-
-        ctx.fillText(
-            "LOVE",
-            this.x,
-            this.y
-        );
-
-        ctx.globalAlpha=1;
-        ctx.shadowBlur=0;
+            color:
+                Math.random()>.5
+                ? "pink"
+                : "purple"
+        });
     }
 }
 
 
-for(let i=0;i<count;i++){
-
-    particles.push(
-        new Particle()
-    );
-}
-
-
-/* =========================
+/* =====================================
    BACKGROUND STARS
-========================= */
+===================================== */
 
-const stars = [];
+let stars=[];
 
-const starCount =
-    W < 600 ? 90 : 160;
+function createStars(){
 
-for(let i=0;i<starCount;i++){
+    stars=[];
 
-    stars.push({
+    const amount =
+        W<600 ? 110 : 190;
 
-        x:Math.random()*W,
+    for(let i=0;i<amount;i++){
 
-        y:Math.random()*H,
+        stars.push({
 
-        size:Math.random()*1.8+0.3,
+            x:Math.random()*W,
 
-        phase:Math.random()*Math.PI*2,
+            y:Math.random()*H,
 
-        speed:
-            0.001+
-            Math.random()*0.003
-    });
+            r:.3+Math.random()*1.5,
+
+            phase:Math.random()*Math.PI*2,
+
+            speed:.001+Math.random()*.003
+        });
+    }
 }
 
+createStars();
 
-/* =========================
-   DRAW STARS
-========================= */
 
-function drawStars(time){
+/* =====================================
+   ANIMATION STATE
+===================================== */
 
-    stars.forEach(star=>{
+let scene = 1;
+let transitioning = false;
 
-        const glow =
-            0.25 +
-            (
-                Math.sin(
-                    time*star.speed+
-                    star.phase
-                )+1
-            )/4;
+const scenes =
+    document.querySelectorAll(".scene");
 
-        ctx.beginPath();
+const flash =
+    document.getElementById("flash");
 
-        ctx.arc(
-            star.x,
-            star.y,
-            star.size,
-            0,
-            Math.PI*2
+const tap =
+    document.getElementById("tap");
+
+
+function showScene(number){
+
+    scenes.forEach((s,i)=>{
+
+        s.classList.toggle(
+            "active",
+            i === number-1
         );
 
-        ctx.fillStyle =
-            Math.random() > 0.5
-            ? `rgba(255,120,190,${glow})`
-            : `rgba(170,100,255,${glow})`;
+    });
 
-        ctx.shadowBlur=8;
+    if(number === 6){
 
-        ctx.shadowColor =
-            "#c45cff";
+        tap.classList.add("hide");
 
-        ctx.fill();
+    }else{
 
-        ctx.shadowBlur=0;
+        tap.classList.remove("hide");
+
+    }
+}
+
+
+/* =====================================
+   PARTICLE TRANSITION
+===================================== */
+
+function transitionParticles(){
+
+    const scatter =
+        scene === 1 ||
+        scene === 6
+        ? false
+        : true;
+
+    particles.forEach((p,i)=>{
+
+        const a =
+            Math.random()*Math.PI*2;
+
+        const distance =
+            scatter
+            ? 120 + Math.random()*Math.max(W,H)
+            : 0;
+
+        p.targetX =
+            scatter
+            ? W/2 + Math.cos(a)*distance
+            : W/2 + heart(p.angle).x*(W<600?9.5:15);
+
+        p.targetY =
+            scatter
+            ? H/2 + Math.sin(a)*distance
+            : H/2 + heart(p.angle).y*(W<600?9.5:15);
+
     });
 }
 
 
-/* =========================
-   ANIMATION
-========================= */
+/* =====================================
+   TAP CONTROL
+===================================== */
+
+document.body.addEventListener("click",()=>{
+
+    if(transitioning || scene >= 6)
+        return;
+
+    transitioning = true;
+
+    flash.classList.add("on");
+
+    transitionParticles();
+
+    setTimeout(()=>{
+
+        scene++;
+
+        showScene(scene);
+
+    },500);
+
+    setTimeout(()=>{
+
+        flash.classList.remove("on");
+
+    },900);
+
+    setTimeout(()=>{
+
+        transitioning=false;
+
+    },1600);
+
+});
+
+
+/* =====================================
+   RENDER
+===================================== */
+
+let lastTime=0;
 
 function animate(time){
 
-    ctx.globalCompositeOperation =
-        "source-over";
+    const delta =
+        Math.min(
+            32,
+            time-lastTime
+        );
 
-    ctx.fillStyle =
-        "rgba(3,0,6,0.20)";
+    lastTime=time;
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    /* background */
+
+    const gradient =
+        ctx.createRadialGradient(
+            W/2,
+            H/2,
+            0,
+            W/2,
+            H/2,
+            Math.max(W,H)*.75
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(60,8,70,.28)"
+    );
+
+    gradient.addColorStop(
+        .45,
+        "rgba(22,3,30,.35)"
+    );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,.95)"
+    );
+
+    ctx.fillStyle=gradient;
 
     ctx.fillRect(
         0,
@@ -348,28 +583,149 @@ function animate(time){
         H
     );
 
-    drawStars(time);
 
-    ctx.globalCompositeOperation =
-        "lighter";
+    /* stars */
+
+    stars.forEach(s=>{
+
+        const alpha =
+            .25+
+            (
+                Math.sin(
+                    time*s.speed+
+                    s.phase
+                )+1
+            )*.25;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            s.x,
+            s.y,
+            s.r,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle =
+            `rgba(255,170,225,${alpha})`;
+
+        ctx.fill();
+    });
+
+
+    /* LOVE particles */
 
     particles.forEach(p=>{
 
-        p.update(time);
-        p.draw();
+        const easing =
+            .055+
+            p.speed*.3;
 
+        p.x +=
+            (p.targetX-p.x)*easing;
+
+        p.y +=
+            (p.targetY-p.y)*easing;
+
+        const breathing =
+            Math.sin(
+                time*.0015+
+                p.phase
+            )*.025;
+
+        const x =
+            p.x+
+            Math.cos(
+                time*.0005+
+                p.orbit
+            )*7*p.depth;
+
+        const y =
+            p.y+
+            Math.sin(
+                time*.0006+
+                p.orbit
+            )*7*p.depth;
+
+        const color =
+            p.color==="pink"
+            ? "#ff63b5"
+            : "#a95cff";
+
+        const alpha =
+            .45+
+            p.depth*.45;
+
+        ctx.save();
+
+        ctx.globalAlpha=alpha;
+
+        ctx.font =
+            `bold ${p.size}px Arial`;
+
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+
+        ctx.shadowBlur =
+            8+p.depth*8;
+
+        ctx.shadowColor=color;
+
+        ctx.fillStyle=color;
+
+        ctx.fillText(
+            "LOVE",
+            x,
+            y
+        );
+
+        ctx.restore();
     });
 
-    ctx.globalCompositeOperation =
-        "source-over";
 
-    requestAnimationFrame(
-        animate
+    /* soft central glow */
+
+    const glow =
+        ctx.createRadialGradient(
+            W/2,
+            H/2,
+            0,
+            W/2,
+            H/2,
+            Math.min(W,H)*.45
+        );
+
+    glow.addColorStop(
+        0,
+        "rgba(185,70,255,.055)"
     );
+
+    glow.addColorStop(
+        .5,
+        "rgba(255,60,170,.018)"
+    );
+
+    glow.addColorStop(
+        1,
+        "transparent"
+    );
+
+    ctx.fillStyle=glow;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    requestAnimationFrame(animate);
 }
 
-requestAnimationFrame(
-    animate
-);
+
+resize();
+requestAnimationFrame(animate);
+
 </script></body>
 </html>
